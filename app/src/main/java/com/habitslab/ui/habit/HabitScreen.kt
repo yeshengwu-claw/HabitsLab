@@ -254,53 +254,49 @@ fun HabitCard(habitWithRecord: HabitWithTodayRecord, onToggle: () -> Unit, onDel
             .scale(scaleAnim)
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isCompleted) {
-                Color(habit.color).copy(alpha = 0.12f)
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isCompleted) 6.dp else 1.dp),
-        border = if (isCompleted) {
-            BorderStroke(2.dp, Color(habit.color).copy(alpha = 0.5f))
-        } else {
-            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-        }
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isCompleted) 8.dp else 1.dp),
+        border = if (isCompleted) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = if (isCompleted) Color(habit.color) else Color.Transparent,
+            shape = RoundedCornerShape(20.dp)
+        ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon with checkmark overlay
+            // Icon with star overlay
             Box(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Brush.linearGradient(listOf(Color(habit.color), Color(habit.color).copy(alpha = 0.7f))))
+                    .background(
+                        if (isCompleted) {
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    Color(habit.color),
+                                    Color(habit.color).copy(alpha = 0.8f)
+                                )
+                            )
+                        } else {
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    Color(habit.color).copy(alpha = 0.5f),
+                                    Color(habit.color).copy(alpha = 0.3f)
+                                )
+                            )
+                        }
+                    )
                     .clickable { onToggle() },
                 contentAlignment = Alignment.Center
             ) {
-                Text(habit.icon, fontSize = 28.sp, color = Color.White, modifier = Modifier.scale(iconScale))
                 if (isCompleted) {
-                    Box(
-                        modifier = Modifier
-                            .size(22.dp)
-                            .align(Alignment.BottomEnd)
-                            .offset(x = 4.dp, y = 4.dp)
-                            .clip(CircleShape)
-                            .background(Color.White),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            tint = Color(habit.color),
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
+                    Text("⭐", fontSize = 28.sp, modifier = Modifier.scale(iconScale))
+                } else {
+                    Text(habit.icon, fontSize = 28.sp, color = Color.White.copy(alpha = 0.7f))
                 }
             }
 
@@ -311,29 +307,34 @@ fun HabitCard(habitWithRecord: HabitWithTodayRecord, onToggle: () -> Unit, onDel
                     habit.name,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 17.sp,
-                    color = if (isCompleted) Color(habit.color) else MaterialTheme.colorScheme.onSurface,
+                    color = if (isCompleted) Color.White else MaterialTheme.colorScheme.onSurface,
                     maxLines = 1, overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (habitWithRecord.streak > 0) {
-                        HabitChip("🔥", "${habitWithRecord.streak}天", Color(0xFFFF9800))
+                        HabitChip("🔥", "${habitWithRecord.streak}天", if (isCompleted) Color.White.copy(alpha = 0.9f) else Color(0xFFFF9800))
                         Spacer(modifier = Modifier.width(8.dp))
                     }
-                    HabitChip("📊", "${(habitWithRecord.weeklyRate * 100).toInt()}%", Color(habit.color))
+                    HabitChip("📊", "${(habitWithRecord.weeklyRate * 100).toInt()}%", if (isCompleted) Color.White.copy(alpha = 0.9f) else Color(habit.color))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     LinearProgressIndicator(
                         progress = { habitWithRecord.weeklyRate },
                         modifier = Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)),
-                        color = Color(habit.color),
-                        trackColor = Color(habit.color).copy(alpha = 0.15f)
+                        color = if (isCompleted) Color.White.copy(alpha = 0.9f) else Color(habit.color),
+                        trackColor = if (isCompleted) Color.White.copy(alpha = 0.3f) else Color(habit.color).copy(alpha = 0.15f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("${habitWithRecord.totalCompleted}次", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        "${habitWithRecord.totalCompleted}次",
+                        fontSize = 11.sp,
+                        color = if (isCompleted) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
+        }
         }
     }
 }
