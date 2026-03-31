@@ -17,7 +17,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.*
@@ -27,12 +30,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.habitslab.R
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.*
+import kotlinx.coroutines.delay
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,94 +42,115 @@ fun HabitScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Celebration state
+    var showCelebration by remember { mutableStateOf(false) }
+    var celebrationColor by remember { mutableStateOf(Color(0xFF4CAF50)) }
+    var celebrationMessage by remember { mutableStateOf("") }
+
     val totalHabits = uiState.habits.size
     val completedToday = uiState.habits.count { it.completedToday }
     val totalStreak = uiState.habits.maxOfOrNull { it.streak } ?: 0
     val overallRate = if (totalHabits > 0) uiState.habits.map { it.weeklyRate }.average().toFloat() else 0f
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            stringResource(R.string.app_name),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
-                        )
-                        Text(
-                            LocalDate.now().format(
-                                DateTimeFormatter.ofPattern("yyyy年M月d日 EEEE", Locale.CHINESE)
-                            ),
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(
+                                stringResource(R.string.app_name),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 22.sp
+                            )
+                            Text(
+                                java.time.LocalDate.now().format(
+                                    java.time.format.DateTimeFormatter.ofPattern("yyyy年M月d日 EEEE", java.util.Locale.CHINESE)
+                                ),
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { viewModel.showAddDialog() },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { viewModel.showAddDialog() },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.habits_add_title))
+                }
+            }
+        ) { padding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(bottom = 100.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.habits_add_title))
-            }
-        }
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(bottom = 100.dp)
-        ) {
-            item {
-                StatsHeader(
-                    completedToday = completedToday,
-                    totalHabits = totalHabits,
-                    totalStreak = totalStreak,
-                    overallRate = overallRate
-                )
-            }
-
-            item {
-                Text(
-                    stringResource(R.string.habits_title),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
-                )
-            }
-
-            if (uiState.isLoading) {
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-            } else if (uiState.habits.isEmpty()) {
-                item {
-                    EmptyState(onAddClick = { viewModel.showAddDialog() })
-                }
-            } else {
-                items(uiState.habits, key = { it.habit.id }) { habitWithRecord ->
-                    HabitCard(
-                        habitWithRecord = habitWithRecord,
-                        onToggle = { viewModel.toggleHabitCompletion(habitWithRecord.habit.id) },
-                        onDelete = { viewModel.deleteHabit(habitWithRecord.habit) },
-                        onClick = { viewModel.selectHabit(habitWithRecord) }
+                    StatsHeader(
+                        completedToday = completedToday,
+                        totalHabits = totalHabits,
+                        totalStreak = totalStreak,
+                        overallRate = overallRate
                     )
                 }
+
+                item {
+                    Text(
+                        stringResource(R.string.habits_title),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+                    )
+                }
+
+                if (uiState.isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                } else if (uiState.habits.isEmpty()) {
+                    item {
+                        EmptyState(onAddClick = { viewModel.showAddDialog() })
+                    }
+                } else {
+                    items(uiState.habits, key = { it.habit.id }) { habitWithRecord ->
+                        HabitCard(
+                            habitWithRecord = habitWithRecord,
+                            onToggle = {
+                                viewModel.toggleHabitCompletion(habitWithRecord.habit.id)
+                                if (!habitWithRecord.completedToday) {
+                                    celebrationColor = Color(habitWithRecord.habit.color)
+                                    showCelebration = true
+                                }
+                            },
+                            onDelete = { viewModel.deleteHabit(habitWithRecord.habit) },
+                            onClick = { viewModel.selectHabit(habitWithRecord) }
+                        )
+                    }
+                }
             }
+        }
+
+        // Celebration overlay
+        if (showCelebration) {
+            ConfettiCelebration(
+                color = celebrationColor,
+                onFinished = { showCelebration = false }
+            )
         }
 
         if (uiState.showAddDialog) {
@@ -149,6 +171,113 @@ fun HabitScreen(
         }
     }
 }
+
+@Composable
+fun ConfettiCelebration(
+    color: Color,
+    onFinished: () -> Unit
+) {
+    val messages = listOf(
+        "太棒了！🎉", "继续保持！💪", "加油！🌟", "你真厉害！👏",
+        "太酷了！🔥", "完美！✨", "坚持就是胜利！🏆", "做得好！👍"
+    )
+    var currentMessage by remember { mutableStateOf(messages.random()) }
+
+    val particles = remember {
+        List(60) {
+            ConfettiParticle(
+                x = Random.nextFloat(),
+                y = Random.nextFloat() * 0.3f - 0.3f,
+                color = listOf(
+                    color, Color(0xFFFFD700), Color(0xFFFF6B6B),
+                    Color(0xFF4ECDC4), Color(0xFFFFE66D), Color(0xFF95E1D3)
+                ).random(),
+                size = Random.nextFloat() * 8f + 4f,
+                speedY = Random.nextFloat() * 0.4f + 0.2f,
+                speedX = (Random.nextFloat() - 0.5f) * 0.3f,
+                rotation = Random.nextFloat() * 360f,
+                rotationSpeed = (Random.nextFloat() - 0.5f) * 10f
+            )
+        }
+    }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "confetti")
+    val time by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "time"
+    )
+
+    LaunchedEffect(Unit) {
+        delay(2500)
+        onFinished()
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        // Confetti particles
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            particles.forEach { particle ->
+                val currentY = particle.y + particle.speedY * time * 1.5f
+                val currentX = particle.x + sin(time * 3f + particle.rotation) * 0.05f + particle.speedX * time
+                val alpha = (1f - time * 0.5f).coerceIn(0f, 1f)
+                val currentRotation = particle.rotation + particle.rotationSpeed * time * 100f
+
+                drawCircle(
+                    color = particle.color.copy(alpha = alpha),
+                    radius = particle.size * (1f + time * 0.5f),
+                    center = Offset(
+                        x = currentX * size.width,
+                        y = currentY * size.height
+                    )
+                )
+            }
+        }
+
+        // Encouraging message
+        val scale by animateFloatAsState(
+            targetValue = 1f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            ),
+            label = "scale"
+        )
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.scale(scale)
+        ) {
+            Text(
+                text = currentMessage,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.graphicsLayer {
+                    shadowElevation = 8.dp.toPx()
+                }
+            )
+        }
+    }
+}
+
+private data class ConfettiParticle(
+    val x: Float,
+    val y: Float,
+    val color: Color,
+    val size: Float,
+    val speedY: Float,
+    val speedX: Float,
+    val rotation: Float,
+    val rotationSpeed: Float
+)
 
 @Composable
 fun StatsHeader(
@@ -274,110 +403,151 @@ fun HabitCard(
     val habit = habitWithRecord.habit
     val isCompleted = habitWithRecord.completedToday
 
+    // Scale animation for completion
+    val scaleAnim by animateFloatAsState(
+        targetValue = if (isCompleted) 1.06f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "scale"
+    )
+
+    // Glow animation
+    val glowAlpha by animateFloatAsState(
+        targetValue = if (isCompleted) 0.25f else 0f,
+        animationSpec = tween(600),
+        label = "glow"
+    )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
+            .graphicsLayer {
+                scaleX = scaleAnim
+                scaleY = scaleAnim
+            }
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isCompleted) {
-                Color(habit.color).copy(alpha = 0.12f)
+                Color(habit.color).copy(alpha = 0.15f)
             } else {
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
             }
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isCompleted) 2.dp else 0.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isCompleted) 6.dp else 0.dp
+        )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(Color(habit.color))
-                    .clickable { onToggle() },
-                contentAlignment = Alignment.Center
-            ) {
-                AnimatedContent(
-                    targetState = isCompleted,
-                    transitionSpec = {
-                        scaleIn() + fadeIn() togetherWith scaleOut() + fadeOut()
-                    },
-                    label = "icon"
-                ) { _ ->
-                    Text(habit.icon, fontSize = 26.sp, color = Color.White)
-                }
-            }
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = habit.name,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    color = if (isCompleted) Color(habit.color) else MaterialTheme.colorScheme.onSurface
+        Box {
+            // Glow effect
+            if (isCompleted) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                                colors = listOf(
+                                    Color(habit.color).copy(alpha = glowAlpha),
+                                    Color.Transparent
+                                )
+                            )
+                        )
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (habitWithRecord.streak > 0) {
-                        Icon(
-                            Icons.Default.LocalFireDepartment,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = Color(0xFFFF9800)
-                        )
-                        Text(
-                            " ${habitWithRecord.streak}${stringResource(R.string.stats_days)}",
-                            fontSize = 12.sp,
-                            color = Color(0xFFFF9800),
-                            fontWeight = FontWeight.Medium
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                    }
-                    Icon(
-                        Icons.Default.BarChart,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        " ${(habitWithRecord.weeklyRate * 100).toInt()}%/${stringResource(R.string.stats_weekly_rate)}",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
 
-            AnimatedVisibility(
-                visible = isCompleted,
-                enter = scaleIn() + fadeIn(),
-                exit = scaleOut() + fadeOut()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(52.dp)
                         .clip(CircleShape)
                         .background(Color(habit.color))
                         .clickable { onToggle() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("✓", fontSize = 18.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    AnimatedContent(
+                        targetState = isCompleted,
+                        transitionSpec = {
+                            scaleIn() + fadeIn() togetherWith scaleOut() + fadeOut()
+                        },
+                        label = "icon"
+                    ) { _ ->
+                        Text(habit.icon, fontSize = 26.sp, color = Color.White)
+                    }
                 }
-            }
 
-            IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    Icons.Default.DeleteOutline,
-                    contentDescription = stringResource(R.string.delete),
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
-                )
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = habit.name,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        color = if (isCompleted) Color(habit.color) else MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (habitWithRecord.streak > 0) {
+                            Icon(
+                                Icons.Default.LocalFireDepartment,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = Color(0xFFFF9800)
+                            )
+                            Text(
+                                " ${habitWithRecord.streak}${stringResource(R.string.stats_days)}",
+                                fontSize = 12.sp,
+                                color = Color(0xFFFF9800),
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                        }
+                        Icon(
+                            Icons.Default.BarChart,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            " ${(habitWithRecord.weeklyRate * 100).toInt()}%",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = isCompleted,
+                    enter = scaleIn() + fadeIn(),
+                    exit = scaleOut() + fadeOut()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color(habit.color))
+                            .clickable { onToggle() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("✓", fontSize = 18.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        Icons.Default.DeleteOutline,
+                        contentDescription = stringResource(R.string.delete),
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }
@@ -421,7 +591,7 @@ fun EmptyState(onAddClick: () -> Unit) {
 @Composable
 fun HabitDetailSheet(
     habitWithRecord: HabitWithTodayRecord,
-    selectedMonth: YearMonth,
+    selectedMonth: java.time.YearMonth,
     onDismiss: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit
@@ -514,12 +684,12 @@ fun HabitDetailSheet(
                 )
                 IconButton(
                     onClick = onNextMonth,
-                    enabled = selectedMonth < YearMonth.now()
+                    enabled = selectedMonth < java.time.YearMonth.now()
                 ) {
                     Icon(
                         Icons.Default.ChevronRight,
                         contentDescription = "Next month",
-                        tint = if (selectedMonth < YearMonth.now()) {
+                        tint = if (selectedMonth < java.time.YearMonth.now()) {
                             MaterialTheme.colorScheme.onSurface
                         } else {
                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
@@ -565,8 +735,8 @@ fun HabitDetailSheet(
                                 if (dayOfMonth in 1..lastDayOfMonth.dayOfMonth) {
                                     val date = selectedMonth.atDay(dayOfMonth)
                                     val isCompleted = completedDays.contains(date)
-                                    val isToday = date == LocalDate.now()
-                                    val isFuture = date.isAfter(LocalDate.now())
+                                    val isToday = date == java.time.LocalDate.now()
+                                    val isFuture = date.isAfter(java.time.LocalDate.now())
 
                                     Box(
                                         modifier = Modifier
