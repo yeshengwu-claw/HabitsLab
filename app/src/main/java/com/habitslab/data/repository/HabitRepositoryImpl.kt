@@ -8,6 +8,7 @@ import com.habitslab.domain.model.Habit
 import com.habitslab.domain.model.HabitRecord
 import com.habitslab.domain.repository.HabitRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import javax.inject.Inject
@@ -38,20 +39,18 @@ class HabitRepositoryImpl @Inject constructor(
 
     override suspend fun toggleHabitCompletion(habitId: Long, date: LocalDate) {
         val dateStr = date.toString()
-        dao.getRecordsForDate(dateStr).collect { records ->
-            val existing = records.find { it.habitId == habitId }
-            if (existing != null) {
-                dao.deleteRecord(habitId, dateStr)
-            } else {
-                dao.insertRecord(
-                    HabitRecordEntity(
-                        habitId = habitId,
-                        date = dateStr,
-                        completed = true
-                    )
+        val records = dao.getRecordsForDate(dateStr).first()
+        val existing = records.find { it.habitId == habitId }
+        if (existing != null) {
+            dao.deleteRecord(habitId, dateStr)
+        } else {
+            dao.insertRecord(
+                HabitRecordEntity(
+                    habitId = habitId,
+                    date = dateStr,
+                    completed = true
                 )
-            }
-            return@collect
+            )
         }
     }
 }
