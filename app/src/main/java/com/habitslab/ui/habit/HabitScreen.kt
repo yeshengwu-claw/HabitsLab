@@ -234,44 +234,104 @@ fun HabitCard(habitWithRecord: HabitWithTodayRecord, onToggle: () -> Unit, onDel
     val habit = habitWithRecord.habit
     val isCompleted = habitWithRecord.completedToday
 
-    val scaleAnim by animateFloatAsState(if (isCompleted) 1.03f else 1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow), label = "s")
+    // Bounce animation when completing
+    val scaleAnim by animateFloatAsState(
+        targetValue = if (isCompleted) 1.04f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "s"
+    )
+    // Icon bounce
+    val iconScale by animateFloatAsState(
+        targetValue = if (isCompleted) 1.15f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "icon"
+    )
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).scale(scaleAnim).clickable { onClick() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .scale(scaleAnim)
+            .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = if (isCompleted) Color(habit.color).copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isCompleted) 4.dp else 1.dp),
-        border = if (isCompleted) BorderStroke(2.dp, Color(habit.color).copy(alpha = 0.4f)) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(Brush.linearGradient(listOf(Color(habit.color), Color(habit.color).copy(alpha = 0.7f)))).clickable { onToggle() }, contentAlignment = Alignment.Center) {
-                Text(habit.icon, fontSize = 28.sp, color = Color.White)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isCompleted) {
+                Color(habit.color).copy(alpha = 0.12f)
+            } else {
+                MaterialTheme.colorScheme.surface
             }
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isCompleted) 6.dp else 1.dp),
+        border = if (isCompleted) {
+            BorderStroke(2.dp, Color(habit.color).copy(alpha = 0.5f))
+        } else {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Icon with checkmark overlay
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Brush.linearGradient(listOf(Color(habit.color), Color(habit.color).copy(alpha = 0.7f))))
+                    .clickable { onToggle() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(habit.icon, fontSize = 28.sp, color = Color.White, modifier = Modifier.scale(iconScale))
+                if (isCompleted) {
+                    Box(
+                        modifier = Modifier
+                            .size(22.dp)
+                            .align(Alignment.BottomEnd)
+                            .offset(x = 4.dp, y = 4.dp)
+                            .clip(CircleShape)
+                            .background(Color.White),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color(habit.color),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.width(14.dp))
+
             Column(modifier = Modifier.weight(1f)) {
-                Text(habit.name, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, color = if (isCompleted) Color(habit.color) else MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    habit.name,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 17.sp,
+                    color = if (isCompleted) Color(habit.color) else MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis
+                )
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (habitWithRecord.streak > 0) { HabitChip("🔥", "${habitWithRecord.streak}天", Color(0xFFFF9800)); Spacer(modifier = Modifier.width(8.dp)) }
+                    if (habitWithRecord.streak > 0) {
+                        HabitChip("🔥", "${habitWithRecord.streak}天", Color(0xFFFF9800))
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
                     HabitChip("📊", "${(habitWithRecord.weeklyRate * 100).toInt()}%", Color(habit.color))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    LinearProgressIndicator(progress = { habitWithRecord.weeklyRate }, modifier = Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)), color = Color(habit.color), trackColor = Color(habit.color).copy(alpha = 0.15f))
+                    LinearProgressIndicator(
+                        progress = { habitWithRecord.weeklyRate },
+                        modifier = Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)),
+                        color = Color(habit.color),
+                        trackColor = Color(habit.color).copy(alpha = 0.15f)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("${habitWithRecord.totalCompleted}次", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            Spacer(modifier = Modifier.width(10.dp))
-            AnimatedContent(targetState = isCompleted, transitionSpec = { scaleIn() + fadeIn() togetherWith scaleOut() + fadeOut() }, label = "c") { completed ->
-                if (completed) {
-                    Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(Color(habit.color)).clickable { onToggle() }, contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
-                    }
-                } else {
-                    Box(modifier = Modifier.size(40.dp).clip(CircleShape).border(2.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape).clickable { onToggle() }, contentAlignment = Alignment.Center) {
-                        Text("+", fontSize = 24.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
                 }
             }
         }
