@@ -206,7 +206,15 @@ fun ConfettiCelebration(color: Color, onFinished: () -> Unit) {
         Spacer(modifier = Modifier.height(80.dp))
         Text(
             text = currentMessage, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold,
-            color = Color.White, textAlign = TextAlign.Center,
+            style = TextStyle(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFFFF6B6B), Color(0xFFFFD700), Color(0xFF4ECDC4),
+                        Color(0xFF9C27B0), Color(0xFFFF9FF3)
+                    )
+                )
+            ),
+            textAlign = TextAlign.Center,
             modifier = Modifier.graphicsLayer {
                 val scale = 1f + sin(time * 10f) * 0.05f
                 scaleX = scale
