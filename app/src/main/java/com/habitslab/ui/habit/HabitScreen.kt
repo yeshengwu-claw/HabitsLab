@@ -39,6 +39,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
+import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -150,48 +151,75 @@ fun ConfettiCelebration(color: Color, onFinished: () -> Unit) {
     val messages = listOf("太棒了！🎉", "继续保持！💪", "加油！🌟", "你真厉害！👏", "太酷了！🔥", "完美！✨", "坚持就是胜利！🏆", "做得好！👍", "太牛了！🚀", "太赞了！💫")
     var currentMessage by remember { mutableStateOf(messages.random()) }
 
+    // Firework bursts
+    val bursts = remember {
+        listOf(
+            FireworkBurst(x = 0.3f, y = 0.35f, color = color),
+            FireworkBurst(x = 0.7f, y = 0.4f, color = Color(0xFFFFD700)),
+            FireworkBurst(x = 0.5f, y = 0.25f, color = Color(0xFFFF6B6B)),
+            FireworkBurst(x = 0.2f, y = 0.5f, color = Color(0xFF4ECDC4)),
+            FireworkBurst(x = 0.8f, y = 0.3f, color = Color(0xFFFFE66D))
+        )
+    }
+
     val particles = remember {
-        List(80) {
-            ConfettiParticle(
-                x = Random.nextFloat(), y = Random.nextFloat() * 0.3f - 0.3f,
-                color = listOf(color, Color(0xFFFFD700), Color(0xFFFF6B6B), Color(0xFF4ECDC4), Color(0xFFFFE66D), Color(0xFF95E1D3), Color(0xFFFF9FF3), Color(0xFF54E346)).random(),
-                size = Random.nextFloat() * 10f + 5f, speedY = Random.nextFloat() * 0.5f + 0.25f,
-                speedX = (Random.nextFloat() - 0.5f) * 0.4f, rotation = Random.nextFloat() * 360f,
-                rotationSpeed = (Random.nextFloat() - 0.5f) * 15f, shape = Random.nextInt(3)
-            )
+        bursts.flatMap { burst ->
+            List(40) {
+                val angle = (it * 9f) % 360f
+                val speed = Random.nextFloat() * 0.3f + 0.1f
+                FireworkParticle(
+                    burstX = burst.x,
+                    burstY = burst.y,
+                    angle = angle,
+                    speed = speed,
+                    color = burst.color,
+                    pSize = Random.nextFloat() * 6f + 3f,
+                    delay = Random.nextFloat() * 0.3f
+                )
+            }
         }
     }
 
     val infiniteTransition = rememberInfiniteTransition(label = "c")
-    val time by infiniteTransition.animateFloat(0f, 1f, infiniteRepeatable(tween(2500, easing = LinearEasing), RepeatMode.Restart), label = "t")
+    val time by infiniteTransition.animateFloat(0f, 1f, infiniteRepeatable(tween(2000, easing = LinearEasing), RepeatMode.Restart), label = "t")
 
-    LaunchedEffect(Unit) { delay(2800); onFinished() }
+    LaunchedEffect(Unit) { delay(2500); onFinished() }
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             particles.forEach { p ->
-                val cy = p.y + p.speedY * time * 1.8f
-                val cx = p.x + sin(time * 5f + p.rotation) * 0.08f + p.speedX * time
-                val alpha = (1f - time * 0.6f).coerceIn(0f, 1f)
-                val cs = p.size * (1f + time * 0.3f)
-                when (p.shape) {
-                    0 -> drawCircle(p.color.copy(alpha = alpha), cs, Offset(cx * size.width, cy * size.height))
-                    1 -> drawRect(p.color.copy(alpha = alpha), Offset(cx * size.width - cs / 2, cy * size.height - cs / 2), androidx.compose.ui.geometry.Size(cs, cs * 0.6f))
-                    else -> drawCircle(p.color.copy(alpha = alpha), cs * 0.7f, Offset(cx * size.width, cy * size.height))
+                val t = (time - p.delay).coerceIn(0f, 1f)
+                val eased = 1f - (1f - t) * (1f - t)
+                val cx = p.burstX + (cos(Math.toRadians(p.angle.toDouble())) * p.speed * eased).toFloat()
+                val cy = p.burstY + (sin(Math.toRadians(p.angle.toDouble())) * p.speed * eased).toFloat()
+                val alpha = (1f - t).coerceIn(0f, 1f)
+                val currentSize = p.pSize * (1f - t * 0.5f)
+                drawCircle(p.color.copy(alpha = alpha), currentSize, Offset(cx * size.width, cy * size.height))
+            }
+            bursts.forEach { burst ->
+                val sparkAlpha = (1f - time * 2f).coerceIn(0f, 1f)
+                if (sparkAlpha > 0f) {
+                    drawCircle(burst.color.copy(alpha = sparkAlpha), 8f + time * 20f, Offset(burst.x * size.width, burst.y * size.height))
                 }
             }
         }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = currentMessage, fontSize = 38.sp, fontWeight = FontWeight.ExtraBold,
-                color = color, textAlign = TextAlign.Center,
-                modifier = Modifier.shadow(8.dp, RoundedCornerShape(12.dp))
-            )
-        }
+        Spacer(modifier = Modifier.height(80.dp))
+        Text(
+            text = currentMessage, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold,
+            color = Color.White, textAlign = TextAlign.Center,
+            modifier = Modifier.graphicsLayer {
+                val scale = 1f + sin(time * 10f) * 0.05f
+                scaleX = scale
+                scaleY = scale
+            }
+        )
     }
 }
 
-private data class ConfettiParticle(val x: Float, val y: Float, val color: Color, val size: Float, val speedY: Float, val speedX: Float, val rotation: Float, val rotationSpeed: Float, val shape: Int)
+private data class FireworkBurst(val x: Float, val y: Float, val color: Color)
+private data class FireworkParticle(val burstX: Float, val burstY: Float, val angle: Float, val speed: Float, val color: Color, val pSize: Float, val delay: Float)
+
+
 
 @Composable
 fun StatsHeader(completedToday: Int, totalHabits: Int, totalStreak: Int, overallRate: Float) {
