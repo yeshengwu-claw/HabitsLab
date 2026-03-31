@@ -1,4 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">HabitsLab</string>
+
+    <!-- Common -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="create">Create</string>
+    <string name="delete">Delete</string>
+    <string name="confirm">Confirm</string>
+
+    <!-- Stats -->
+    <string name="stats_today_complete">Today</string>
+    <string name="stats_streak">Best Streak</string>
+    <string name="stats_weekly_rate">This Week</string>
+    <string name="stats_habits">habits</string>
+    <string name="stats_days">days</string>
+    <string name="stats_progress">Today\'s Progress</string>
+
+    <!-- Habits -->
+    <string name="habits_title">My Habits</string>
+    <string name="habits_empty_title">No habits yet</string>
+    <string name="habits_empty_subtitle">Tap the button below\nto create your first habit</string>
+    <string name="habits_create_button">Create Habit</string>
+    <string name="habits_add_title">Create New Habit</string>
+    <string name="habits_name_label">Habit Name</string>
+    <string name="habits_icon_label">Choose Icon</string>
+    <string name="habits_color_label">Choose Color</string>
+
+    <!-- Detail -->
+    <string name="detail_total_completed">%d completions</string>
+    <string name="detail_streak_label">streak</string>
+    <string name="detail_legend_done">Done</string>
+    <string name="detail_legend_today">Today</string>
+
+    <!-- Icons -->
+    <string name="icon_done">Completed</string>
+    <string name="icon_fitness">Fitness</string>
+    <string name="icon_read">Reading</string>
+    <string name="icon_run">Running</string>
+    <string name="icon_water">Water</string>
+    <string name="icon_meditate">Meditation</string>
+    <string name="icon_sleep">Sleep</string>
+    <string name="icon_food">Diet</string>
+    <string name="icon_write">Writing</string>
+    <string name="icon_target">Goal</string>
+    <string name="icon_create">Create</string>
+    <string name="icon_clean">Organize</string>
+
+    <!-- Colors -->
+    <string name="color_green">Green</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_red">Red</string>
+    <string name="color_purple">Purple</string>
+    <string name="color_cyan">Cyan</string>
+    <string name="color_pink">Pink</string>
+    <string name="color_grayblue">Gray Blue</string>
+
+    <!-- Weekdays -->
+    <string name="weekday_sun">S</string>
+    <string name="weekday_mon">M</string>
+    <string name="weekday_tue">T</string>
+    <string name="weekday_wed">W</string>
+    <string name="weekday_thu">T</string>
+    <string name="weekday_fri">F</string>
+    <string name="weekday_sat">S</string>
 </resources>

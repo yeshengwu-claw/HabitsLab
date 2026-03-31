@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">习惯实验室</string>
+
+    <!-- Common -->
+    <string name="ok">确定</string>
+    <string name="cancel">取消</string>
+    <string name="create">创建</string>
+    <string name="delete">删除</string>
+    <string name="confirm">确认</string>
+
+    <!-- Stats -->
+    <string name="stats_today_complete">今日完成</string>
+    <string name="stats_streak">最长连续</string>
+    <string name="stats_weekly_rate">本周完成率</string>
+    <string name="stats_habits">习惯</string>
+    <string name="stats_days">天</string>
+    <string name="stats_progress">今日进度</string>
+
+    <!-- Habits -->
+    <string name="habits_title">我的习惯</string>
+    <string name="habits_empty_title">还没有习惯</string>
+    <string name="habits_empty_subtitle">点击下方按钮\n创建你的第一个习惯</string>
+    <string name="habits_create_button">创建习惯</string>
+    <string name="habits_add_title">创建新习惯</string>
+    <string name="habits_name_label">习惯名称</string>
+    <string name="habits_icon_label">选择图标</string>
+    <string name="habits_color_label">选择颜色</string>
+
+    <!-- Detail -->
+    <string name="detail_total_completed">共 %d 次完成</string>
+    <string name="detail_streak_label">连续天数</string>
+    <string name="detail_legend_done">已完成</string>
+    <string name="detail_legend_today">今日</string>
+
+    <!-- Weekdays -->
+    <string name="weekday_sun">日</string>
+    <string name="weekday_mon">一</string>
+    <string name="weekday_tue">二</string>
+    <string name="weekday_wed">三</string>
+    <string name="weekday_thu">四</string>
+    <string name="weekday_fri">五</string>
+    <string name="weekday_sat">六</string>
+</resources>

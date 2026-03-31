@@ -10,29 +10,29 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.habitslab.R
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
-import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +41,6 @@ fun HabitScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Global stats
     val totalHabits = uiState.habits.size
     val completedToday = uiState.habits.count { it.completedToday }
     val totalStreak = uiState.habits.maxOfOrNull { it.streak } ?: 0
@@ -53,12 +52,14 @@ fun HabitScreen(
                 title = {
                     Column {
                         Text(
-                            "HabitsLab",
+                            stringResource(R.string.app_name),
                             fontWeight = FontWeight.Bold,
                             fontSize = 22.sp
                         )
                         Text(
-                            LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy年M月d日 EEEE", Locale.CHINESE)),
+                            LocalDate.now().format(
+                                DateTimeFormatter.ofPattern("yyyy年M月d日 EEEE", Locale.CHINESE)
+                            ),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -75,7 +76,7 @@ fun HabitScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White
             ) {
-                Icon(Icons.Default.Add, contentDescription = "添加习惯")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.habits_add_title))
             }
         }
     ) { padding ->
@@ -85,20 +86,18 @@ fun HabitScreen(
                 .padding(padding),
             contentPadding = PaddingValues(bottom = 100.dp)
         ) {
-            // Stats Header
             item {
                 StatsHeader(
-                    totalHabits = totalHabits,
                     completedToday = completedToday,
+                    totalHabits = totalHabits,
                     totalStreak = totalStreak,
                     overallRate = overallRate
                 )
             }
 
-            // Section Title
             item {
                 Text(
-                    "我的习惯",
+                    stringResource(R.string.habits_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
@@ -153,8 +152,8 @@ fun HabitScreen(
 
 @Composable
 fun StatsHeader(
-    totalHabits: Int,
     completedToday: Int,
+    totalHabits: Int,
     totalStreak: Int,
     overallRate: Float
 ) {
@@ -163,38 +162,36 @@ fun StatsHeader(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        // Main stats row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             StatCard(
                 modifier = Modifier.weight(1f),
-                title = "今日完成",
+                title = stringResource(R.string.stats_today_complete),
                 value = "$completedToday/$totalHabits",
-                subtitle = "习惯",
+                subtitle = stringResource(R.string.stats_habits),
                 icon = Icons.Default.CheckCircle,
                 color = Color(0xFF4CAF50)
             )
             StatCard(
                 modifier = Modifier.weight(1f),
-                title = "最长连续",
+                title = stringResource(R.string.stats_streak),
                 value = "$totalStreak",
-                subtitle = "天",
+                subtitle = stringResource(R.string.stats_days),
                 icon = Icons.Default.LocalFireDepartment,
                 color = Color(0xFFFF9800)
             )
             StatCard(
                 modifier = Modifier.weight(1f),
-                title = "本周完成率",
+                title = stringResource(R.string.stats_weekly_rate),
                 value = "${(overallRate * 100).toInt()}%",
                 subtitle = "",
-                icon = Icons.Default.TrendingUp,
+                icon = Icons.AutoMirrored.Filled.TrendingUp,
                 color = Color(0xFF2196F3)
             )
         }
 
-        // Today's progress bar
         if (totalHabits > 0) {
             Spacer(modifier = Modifier.height(16.dp))
             Card(
@@ -210,7 +207,7 @@ fun StatsHeader(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("今日进度", fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                        Text(stringResource(R.string.stats_progress), fontWeight = FontWeight.Medium, fontSize = 14.sp)
                         Text(
                             "$completedToday / $totalHabits",
                             fontWeight = FontWeight.Bold,
@@ -231,7 +228,6 @@ fun StatsHeader(
                 }
             }
         }
-
         Spacer(modifier = Modifier.height(8.dp))
     }
 }
@@ -256,19 +252,9 @@ fun StatCard(
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(20.dp)
-            )
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                value,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                color = color
-            )
+            Text(value, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = color)
             Text(
                 if (subtitle.isNotEmpty()) "$subtitle · $title" else title,
                 fontSize = 11.sp,
@@ -309,7 +295,6 @@ fun HabitCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon with check animation
             Box(
                 modifier = Modifier
                     .size(52.dp)
@@ -324,18 +309,13 @@ fun HabitCard(
                         scaleIn() + fadeIn() togetherWith scaleOut() + fadeOut()
                     },
                     label = "icon"
-                ) { completed ->
-                    Text(
-                        text = habit.icon,
-                        fontSize = 26.sp,
-                        color = Color.White
-                    )
+                ) { _ ->
+                    Text(habit.icon, fontSize = 26.sp, color = Color.White)
                 }
             }
 
             Spacer(modifier = Modifier.width(14.dp))
 
-            // Content
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = habit.name,
@@ -345,7 +325,6 @@ fun HabitCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Streak badge
                     if (habitWithRecord.streak > 0) {
                         Icon(
                             Icons.Default.LocalFireDepartment,
@@ -354,14 +333,13 @@ fun HabitCard(
                             tint = Color(0xFFFF9800)
                         )
                         Text(
-                            " ${habitWithRecord.streak}天",
+                            " ${habitWithRecord.streak}${stringResource(R.string.stats_days)}",
                             fontSize = 12.sp,
                             color = Color(0xFFFF9800),
                             fontWeight = FontWeight.Medium
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                     }
-                    // Weekly rate
                     Icon(
                         Icons.Default.BarChart,
                         contentDescription = null,
@@ -369,14 +347,13 @@ fun HabitCard(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        " ${(habitWithRecord.weeklyRate * 100).toInt()}%/周",
+                        " ${(habitWithRecord.weeklyRate * 100).toInt()}%/${stringResource(R.string.stats_weekly_rate)}",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            // Check mark
             AnimatedVisibility(
                 visible = isCompleted,
                 enter = scaleIn() + fadeIn(),
@@ -394,11 +371,10 @@ fun HabitCard(
                 }
             }
 
-            // Delete button
             IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
                 Icon(
                     Icons.Default.DeleteOutline,
-                    contentDescription = "删除",
+                    contentDescription = stringResource(R.string.delete),
                     tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                     modifier = Modifier.size(20.dp)
                 )
@@ -416,33 +392,27 @@ fun EmptyState(onAddClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(40.dp))
-        Text(
-            "🌱",
-            fontSize = 64.sp
-        )
+        Text("🌱", fontSize = 64.sp)
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "还没有习惯",
+            stringResource(R.string.habits_empty_title),
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            "点击下方按钮\n创建你的第一个习惯",
+            stringResource(R.string.habits_empty_subtitle),
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             lineHeight = 20.sp
         )
         Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = onAddClick,
-            shape = RoundedCornerShape(12.dp)
-        ) {
+        Button(onClick = onAddClick, shape = RoundedCornerShape(12.dp)) {
             Icon(Icons.Default.Add, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("创建习惯")
+            Text(stringResource(R.string.habits_create_button))
         }
     }
 }
@@ -464,6 +434,16 @@ fun HabitDetailSheet(
 
     val completedDays = records.filter { it.completed }.map { it.date }.toSet()
 
+    val weekdays = listOf(
+        stringResource(R.string.weekday_sun),
+        stringResource(R.string.weekday_mon),
+        stringResource(R.string.weekday_tue),
+        stringResource(R.string.weekday_wed),
+        stringResource(R.string.weekday_thu),
+        stringResource(R.string.weekday_fri),
+        stringResource(R.string.weekday_sat)
+    )
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
@@ -475,7 +455,6 @@ fun HabitDetailSheet(
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 40.dp)
         ) {
-            // Header
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
@@ -490,7 +469,7 @@ fun HabitDetailSheet(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(habit.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                     Text(
-                        "共 ${habitWithRecord.totalCompleted} 次完成",
+                        stringResource(R.string.detail_total_completed, habitWithRecord.totalCompleted),
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -510,20 +489,23 @@ fun HabitDetailSheet(
                             color = Color(0xFFFF9800)
                         )
                     }
-                    Text("连续天数", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        stringResource(R.string.detail_streak_label),
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Month navigation
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onPreviousMonth) {
-                    Icon(Icons.Default.ChevronLeft, contentDescription = "上一月")
+                    Icon(Icons.Default.ChevronLeft, contentDescription = "Previous month")
                 }
                 Text(
                     "${selectedMonth.year}年${selectedMonth.monthValue}月",
@@ -536,7 +518,7 @@ fun HabitDetailSheet(
                 ) {
                     Icon(
                         Icons.Default.ChevronRight,
-                        contentDescription = "下一月",
+                        contentDescription = "Next month",
                         tint = if (selectedMonth < YearMonth.now()) {
                             MaterialTheme.colorScheme.onSurface
                         } else {
@@ -548,9 +530,8 @@ fun HabitDetailSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Weekday headers
             Row(modifier = Modifier.fillMaxWidth()) {
-                listOf("日", "一", "二", "三", "四", "五", "六").forEach { day ->
+                weekdays.forEach { day ->
                     Text(
                         day,
                         modifier = Modifier.weight(1f),
@@ -564,7 +545,6 @@ fun HabitDetailSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Calendar grid
             val totalCells = firstDayOfWeek + lastDayOfMonth.dayOfMonth
             val rows = (totalCells + 6) / 7
 
@@ -601,11 +581,7 @@ fun HabitDetailSheet(
                                             )
                                             .then(
                                                 if (isToday && !isCompleted) {
-                                                    Modifier.border(
-                                                        2.dp,
-                                                        MaterialTheme.colorScheme.primary,
-                                                        CircleShape
-                                                    )
+                                                    Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
                                                 } else Modifier
                                             ),
                                         contentAlignment = Alignment.Center
@@ -630,7 +606,6 @@ fun HabitDetailSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Legend
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -643,7 +618,7 @@ fun HabitDetailSheet(
                         .background(Color(habit.color))
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("已完成", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.detail_legend_done), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.width(20.dp))
                 Box(
                     modifier = Modifier
@@ -652,7 +627,7 @@ fun HabitDetailSheet(
                         .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("今日", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.detail_legend_today), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -669,42 +644,40 @@ fun AddHabitDialog(
     var selectedColor by remember { mutableStateOf(0xFF4CAF50L) }
 
     val icons = listOf(
-        "✓" to "完成",
-        "💪" to "健身",
-        "📚" to "阅读",
-        "🏃" to "跑步",
-        "💧" to "喝水",
-        "🧘" to "冥想",
-        "💤" to "睡眠",
-        "🍎" to "饮食",
-        "✍️" to "写作",
-        "🎯" to "目标",
-        "🎨" to "创作",
-        "🧹" to "整理"
+        "✓" to "icon_done",
+        "💪" to "icon_fitness",
+        "📚" to "icon_read",
+        "🏃" to "icon_run",
+        "💧" to "icon_water",
+        "🧘" to "icon_meditate",
+        "💤" to "icon_sleep",
+        "🍎" to "icon_food",
+        "✍️" to "icon_write",
+        "🎯" to "icon_target",
+        "🎨" to "icon_create",
+        "🧹" to "icon_clean"
     )
     val colors = listOf(
-        0xFF4CAF50L to "绿色",
-        0xFF2196F3L to "蓝色",
-        0xFFFF9800L to "橙色",
-        0xFFF44336L to "红色",
-        0xFF9C27B0L to "紫色",
-        0xFF00BCD4L to "青色",
-        0xFFE91E63L to "粉色",
-        0xFF607D8BL to "灰蓝"
+        0xFF4CAF50L to "color_green",
+        0xFF2196F3L to "color_blue",
+        0xFFFF9800L to "color_orange",
+        0xFFF44336L to "color_red",
+        0xFF9C27B0L to "color_purple",
+        0xFF00BCD4L to "color_cyan",
+        0xFFE91E63L to "color_pink",
+        0xFF607D8BL to "color_grayblue"
     )
 
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(24.dp),
-        title = {
-            Text("创建新习惯", fontWeight = FontWeight.Bold)
-        },
+        title = { Text(stringResource(R.string.habits_add_title), fontWeight = FontWeight.Bold) },
         text = {
             Column {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("习惯名称") },
+                    label = { Text(stringResource(R.string.habits_name_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true
@@ -712,36 +685,32 @@ fun AddHabitDialog(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Text("选择图标", fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                Text(stringResource(R.string.habits_icon_label), fontWeight = FontWeight.Medium, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(icons) { (icon, label) ->
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.clickable { selectedIcon = icon }
+                    items(icons) { (icon, _) ->
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (selectedIcon == icon) MaterialTheme.colorScheme.primaryContainer
+                                    else MaterialTheme.colorScheme.surfaceVariant
+                                )
+                                .clickable { selectedIcon = icon },
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (selectedIcon == icon) MaterialTheme.colorScheme.primaryContainer
-                                        else MaterialTheme.colorScheme.surfaceVariant
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(icon, fontSize = 22.sp)
-                            }
+                            Text(icon, fontSize = 22.sp)
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Text("选择颜色", fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                Text(stringResource(R.string.habits_color_label), fontWeight = FontWeight.Medium, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    items(colors) { (color, label) ->
+                    items(colors) { (color, _) ->
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
@@ -769,12 +738,12 @@ fun AddHabitDialog(
                 enabled = name.isNotBlank(),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("创建")
+                Text(stringResource(R.string.create))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
